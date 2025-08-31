@@ -1,8 +1,13 @@
 import 'package:ecommerce_app/utils/app_textstyles.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../controllers/favorite_controller.dart';
 import '../../models/product.dart';
+
+
 
 class ProductCard extends StatelessWidget {
   final Product product;
@@ -12,11 +17,12 @@ class ProductCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final favoriteController = Get.find<FavoriteController>();
 
     return Container(
       constraints: BoxConstraints(
         maxWidth: screenWidth * 0.9,
-      ), // BoxConstraints
+      ),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
@@ -41,63 +47,45 @@ class ProductCard extends StatelessWidget {
                   borderRadius: BorderRadius.vertical(
                     top: Radius.circular(12),
                   ),
-                  child: Image.asset(
-                    product.imageUrl,
+                  child: Image.network(
+                    product.images.isNotEmpty ? product.images[0] : 'https://placehold.co/600x400',
                     width: double.infinity,
                     fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Image.network(
+                      'https://placehold.co/600x400',
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
               ),
-              //favorite button
+              // favorite button
               Positioned(
                 right: 8,
                 top: 8,
-                child: IconButton(
+                child: Obx(() => IconButton(
                   icon: Icon(
-                    product.isFavorite ? Icons.favorite : Icons.favorite_border,
-                    color: product.isFavorite
+                    favoriteController.favoriteIds.contains(product.id)
+                        ? Icons.favorite
+                        : Icons.favorite_border,
+                    color: favoriteController.favoriteIds.contains(product.id)
                         ? Theme.of(context).primaryColor
                         : (isDark ? Colors.grey[400] : Colors.grey),
-                  ), // Icon
-                  onPressed: () {},
-                ),
+                  ),
+                  onPressed: () {
+                    favoriteController.toggleFavorite(product.id);
+                  },
+                )),
               ),
-              // if (product.oldPrice != null)
-              //   Positioned(
-              //     left: 8,
-              //     top: 8,
-              //     child: Container(
-              //       padding: EdgeInsets.symmetric(
-              //         horizontal: 8,
-              //         vertical: 4,
-              //       ), // EdgeInsets.symmetric
-              //       decoration: BoxDecoration(
-              //         color: Theme.of(context).primaryColor,
-              //         borderRadius: BorderRadius.circular(4),
-              //       ), // BoxDecoration
-              //       // discount text
-              //       child: Text(
-              //         '',
-              //         style: AppTextstyle.withColor(
-              //           AppTextstyle.withWeight(
-              //             AppTextstyle.bodySmall,
-              //             FontWeight.bold,
-              //           ),
-              //           Colors.white,
-              //         ),
-              //       ),
-              //     ),
-              //   ),
             ],
           ),
-
-          // ten san pham gia ca
+          // product title and category
           Padding(
             padding: EdgeInsets.all(screenWidth * 0.02),
             child: Column(
               children: [
                 Text(
-                  product.name,
+                  product.title,
                   style: AppTextstyle.withColor(
                     AppTextstyle.withWeight(
                       AppTextstyle.h3,
@@ -110,12 +98,12 @@ class ProductCard extends StatelessWidget {
                 ),
                 SizedBox(height: screenWidth * 0.01),
                 Text(
-                  product.category,
+                  product.category.name,
                   style: AppTextstyle.withColor(
                     AppTextstyle.bodyMedium,
                     isDark ? Colors.grey[400]! : Colors.grey[600]!,
                   ),
-                ), // Text
+                ),
                 SizedBox(height: screenWidth * 0.01),
                 Row(
                   children: [
@@ -133,10 +121,9 @@ class ProductCard extends StatelessWidget {
                 ),
               ],
             ),
-          )
+          ),
         ],
       ),
-
     );
   }
 }

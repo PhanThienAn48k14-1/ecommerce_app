@@ -85,7 +85,7 @@ class HomeScreen extends StatelessWidget {
             const CustomSearchBar(),
 
             // category chips
-            const CategoryChips(),
+            // const CategoryChips(),
 
             //popular products
              Padding(

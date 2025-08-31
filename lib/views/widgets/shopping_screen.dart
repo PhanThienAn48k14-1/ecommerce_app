@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'category_chips.dart';
+import 'custom_search_bar.dart';
 
 class ShoppingScreen extends StatelessWidget {
   const ShoppingScreen({super.key});
@@ -22,22 +23,23 @@ class ShoppingScreen extends StatelessWidget {
             isDark ? Colors.white : Colors.black,
           ),
         ),
-        actions: [
-          IconButton(
-            onPressed: () {},
-            icon: Icon(
-              Icons.search,
-              color: isDark ? Colors.white : Colors.black,
-            ),
-          ),
-        ],
+        // actions: [
+        //   IconButton(
+        //     onPressed: () {},
+        //     icon: Icon(
+        //       Icons.search,
+        //       color: isDark ? Colors.white : Colors.black,
+        //     ),
+        //   ),
+        // ],
       ),
       body: const Column(
         children: [
-          Padding(
-            padding: EdgeInsets.only(top: 16),
-            child: CategoryChips(),
-          ),
+           CustomSearchBar(),
+          // Padding(
+          //   padding: EdgeInsets.only(top: 16),
+          //   child: CategoryChips(),
+          // ),
           Expanded(
             child: ProductGrid(),
           ),

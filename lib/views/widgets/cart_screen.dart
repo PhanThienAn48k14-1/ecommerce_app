@@ -1,11 +1,13 @@
+import 'package:ecommerce_app/models/product.dart';
 import 'package:ecommerce_app/utils/app_textstyles.dart';
 import 'package:ecommerce_app/views/widgets/check_out_screen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
 
-import '../../models/product.dart';
+import '../../controllers/cart_controller.dart';
+
+
 
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
@@ -13,6 +15,7 @@ class CartScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final CartController controller = Get.find<CartController>();
 
     return Scaffold(
       appBar: AppBar(
@@ -26,28 +29,35 @@ class CartScreen extends StatelessWidget {
         title: Text(
           'My Cart',
           style: AppTextstyle.withColor(
-              AppTextstyle.h3,
-              isDark ? Colors.white : Colors.black),
+            AppTextstyle.h3,
+            isDark ? Colors.white : Colors.black,
+          ),
         ),
       ),
-      body: Column(
+      body: Obx(() => Column(
         children: [
           Expanded(
-            child: ListView.builder(
+            child: controller.cartItems.isEmpty
+                ? const Center(child: Text('No items in cart'))
+                : ListView.builder(
               padding: const EdgeInsets.all(16),
-              itemCount: products.length,
+              itemCount: controller.cartItems.length,
               itemBuilder: (context, index) => _buildCartItem(
                 context,
-                products[index],
+                controller.cartItems.keys.toList()[index],
+                controller.cartItems.values.toList()[index],
+                controller,
               ),
             ),
           ),
-          _buildCartSummery(context),
+          _buildCartSummary(context, controller),
         ],
-      ),
+      )),
     );
   }
-  Widget _buildCartItem(BuildContext context, Product product) {
+
+  Widget _buildCartItem(
+      BuildContext context, Product product, int quantity, CartController controller) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -67,24 +77,30 @@ class CartScreen extends StatelessWidget {
           // product image
           ClipRRect(
             borderRadius: const BorderRadius.horizontal(left: Radius.circular(16)),
-            child: Image.asset(
-              product.imageUrl,
+            child: Image.network(
+              product.images.isNotEmpty ? product.images[0] : 'https://placehold.co/600x400',
               width: 100,
               height: 100,
               fit: BoxFit.cover,
-            ), // Image.asset
-          ), // ClipRRect
+              errorBuilder: (context, error, stackTrace) => Image.network(
+                'https://placehold.co/600x400',
+                width: 100,
+                height: 100,
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(12),
-              child:  Column(
+              child: Column(
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Expanded(
                         child: Text(
-                          product.name,
+                          product.title,
                           style: AppTextstyle.withColor(
                             AppTextstyle.bodyLarge,
                             Theme.of(context).textTheme.bodyLarge!.color!,
@@ -93,10 +109,12 @@ class CartScreen extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      IconButton(onPressed: () {}, icon: const Icon(
-                        Icons.delete_outline,
-                        color: Colors.red
-                      )
+                      IconButton(
+                        onPressed: () => controller.removeFromCart(product),
+                        icon: const Icon(
+                          Icons.delete_outline,
+                          color: Colors.red,
+                        ),
                       ),
                     ],
                   ),
@@ -105,7 +123,7 @@ class CartScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        '\$${product.price}',
+                        '\$${(product.price * quantity).toStringAsFixed(2)}',
                         style: AppTextstyle.withColor(
                           AppTextstyle.h3,
                           Theme.of(context).primaryColor,
@@ -115,11 +133,11 @@ class CartScreen extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: Theme.of(context).primaryColor.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
-                        ), // BoxDecoration
+                        ),
                         child: Row(
                           children: [
                             IconButton(
-                              onPressed: () {},
+                              onPressed: () => controller.updateQuantity(product, quantity - 1),
                               icon: Icon(
                                 Icons.remove,
                                 size: 20,
@@ -127,14 +145,14 @@ class CartScreen extends StatelessWidget {
                               ),
                             ),
                             Text(
-                              '1',
+                              '$quantity',
                               style: AppTextstyle.withColor(
                                 AppTextstyle.bodyLarge,
                                 Theme.of(context).primaryColor,
                               ),
-                            ), // Text
+                            ),
                             IconButton(
-                              onPressed: () {},
+                              onPressed: () => controller.updateQuantity(product, quantity + 1),
                               icon: Icon(
                                 Icons.add,
                                 size: 20,
@@ -153,9 +171,9 @@ class CartScreen extends StatelessWidget {
         ],
       ),
     );
-
   }
-  Widget _buildCartSummery(BuildContext context) {
+
+  Widget _buildCartSummary(BuildContext context, CartController controller) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -178,14 +196,14 @@ class CartScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Total (4 items)',
+                'Total (${controller.totalItems} items)',
                 style: AppTextstyle.withColor(
                   AppTextstyle.bodyMedium,
                   Theme.of(context).textTheme.bodyLarge!.color!,
                 ),
               ),
               Text(
-                '\$599.00',
+                '\$${controller.totalPrice.toStringAsFixed(2)}',
                 style: AppTextstyle.withColor(
                   AppTextstyle.h2,
                   Theme.of(context).primaryColor,
@@ -197,9 +215,9 @@ class CartScreen extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: () {
-                Get.to(()=>CheckOutScreen());
-              },
+              onPressed: controller.cartItems.isEmpty
+                  ? null
+                  : () => Get.to(() => CheckOutScreen()),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Theme.of(context).primaryColor,
                 padding: const EdgeInsets.symmetric(vertical: 16),
@@ -207,15 +225,15 @@ class CartScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child:  Text(
-                  'Proceed to Checkout',
-                    style: AppTextstyle.withColor(
-                        AppTextstyle.buttonMedium,
-                        Colors.white
-                    ),
+              child: Text(
+                'Proceed to Checkout',
+                style: AppTextstyle.withColor(
+                  AppTextstyle.buttonMedium,
+                  Colors.white,
+                ),
               ),
             ),
-          )
+          ),
         ],
       ),
     );

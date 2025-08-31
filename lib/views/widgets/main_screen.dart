@@ -20,12 +20,12 @@ class MainScreen extends StatelessWidget {
     return GetBuilder<ThemeController>( //Getbuilder dùng để rebuild giao diện khi trạng thái themeController thay đổi
       builder: (themeController) => Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        body: AnimatedSwitcher(
+        body: AnimatedSwitcher(// hiển thị qua lại giữa các màn hình
           duration: const Duration(milliseconds: 200),
           child: Obx(
                 () => IndexedStack( // hiêển thị một trong các widget con  dựa trên chỉ số index
               key: ValueKey(navigationController.currentIndex.value),
-              index: navigationController.currentIndex.value,
+              index: navigationController.currentIndex.value, // khi giá trị index thay đổi sẽ thay đổi màn hình tương ứng
               children: const [
                 HomeScreen(),
                 ShoppingScreen(),

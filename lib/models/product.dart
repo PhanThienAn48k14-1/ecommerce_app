@@ -1,56 +1,58 @@
-class Product {
+class Category {
+  final int id;
   final String name;
-  final String category;
-  final double price;
-  final double? oldPrice;
-  final String imageUrl;
-  final bool isFavorite;
-  final String description;
+  final String image;
+  final String slug;
 
-  const Product({
-    required this.category,
-    required this.description,
-    required this.imageUrl,
+  const Category({
+    required this.id,
     required this.name,
-    required this.price,
-    this.oldPrice,
-    this.isFavorite = false,
+    required this.image,
+    required this.slug,
   });
+
+  factory Category.fromJson(Map<String, dynamic> json) { // này là chuyển đổi json dạng key value sang dạng định nghĩa theo ý mình
+    return Category(
+      id: json['id'] as int,
+      name: json['name'] as String,
+      image: json['image'] as String,
+      slug: json['slug'] as String,
+    );
+  }
 }
 
-final List<Product> products = [
-  const Product(
-    name: 'Shoes',
-    category: 'Footwear',
-    isFavorite: true,
-    price: 69.00,
-    oldPrice: 189.00,
-    imageUrl: 'assets/images/nike.jpg',
-    description: 'This is a description of the product 1',
-  ),
-  const Product(
-    name: 'laptop',
-    category: 'Electronics',
-    price: 69.00,
-    oldPrice: 189.00,
-    imageUrl: 'assets/images/shoe.jpg',
-    description: 'This is a description of the product 2',
-  ),
-  const Product(
-    name: 'jordan shoes',
-    category: 'Footwear',
-    price: 69.00,
-    isFavorite: true,
-    oldPrice: 189.00,
-    imageUrl: 'assets/images/shoe.jpg',
-    description: 'This is a description of the product 3',
-  ),
-  const Product(
-    name: 'Puma',
-    category: 'Footwear',
-    price: 69.00,
-    oldPrice: 189.00,
-    imageUrl: 'assets/images/shoe.jpg',
-    description: 'This is a description of the product 4',
-  ),
-];
+class Product {
+  final int id;
+  final String title;
+  final String slug;
+  final double price;
+  final String description;
+  final Category category;
+  final List<String> images;
+  final bool isFavorite;
+
+  const Product({
+    required this.id,
+    required this.title,
+    required this.slug,
+    required this.price,
+    required this.description,
+    required this.category,
+    required this.images,
+    this.isFavorite = false,
+  });
+
+  factory Product.fromJson(Map<String, dynamic> json) {
+    return Product(
+      id: json['id'] as int, //mục đích của các dòng này là để ép kiểu theo value được chọn, ví dụ ép kiểu id theo key id từ kiểu dynamic sang int
+      title: json['title'] as String,
+      slug: json['slug'] as String,
+      price: (json['price'] as num).toDouble(),
+      description: json['description'] as String,
+      category: Category.fromJson(json['category'] as Map<String, dynamic>),
+      images: List<String>.from(json['images'] as List),
+      isFavorite: false,
+    );
+  }
+}
+
